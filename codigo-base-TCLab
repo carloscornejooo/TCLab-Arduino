@@ -1,0 +1,44 @@
+//Definición de pines y variables globales
+const byte sensorPin = 0; 
+const byte pwmPin = 3;     
+const byte ledPin = 9;     
+float tempSensor = 0.0;
+String dato = "";
+int PWM = 0;
+
+//Función para leer temperatura. Suma diez valores de temperatura y retorna el promedio.
+float tempRead(int sensorPin)
+{
+  float aux1 = 0.0; 
+  float aux2 = 0.0;
+  //Filtro
+  for(int i = 0; i < 10; i++){
+    aux1 = aux1 + (float(analogRead(sensorPin))*3.3/1023.0-0.5)/0.01; //Ecuación para el sensor TMP36
+  }
+  aux2 = aux1/10.0;
+  return(aux2);
+}
+
+void setup() {  
+  Serial.begin(9600);
+  pinMode(ledPin,OUTPUT);    
+  digitalWrite(ledPin,LOW);   
+  analogReference(EXTERNAL);  //Referencia analógica a 3.3V
+  analogWrite(pwmPin,0);
+}
+
+void loop() {
+  tempSensor = tempRead(sensorPin);
+  digitalWrite(ledPin, tempSensor > 40.0 ? HIGH : LOW);
+
+  if(Serial.available() > 0){
+    dato = Serial.readStringUntil('\n');
+    PWM = dato.toInt();
+  }
+
+  analogWrite(pwmPin, map(PWM, 0, 100, 0, 255));
+  Serial.print(tempSensor);
+  Serial.print(", ");
+  Serial.println(PWM);
+  delay(1000);
+}  
